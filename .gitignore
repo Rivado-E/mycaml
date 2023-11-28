@@ -1,0 +1,10 @@
+# Rust/Cargo
+target/
+Cargo.lock
+# **/target/
+
+# Rust build artifacts
+*.rlib
+*.rmeta
+**/*.rlib
+**/*.rmetatarget

@@ -1,0 +1,3 @@
+letallthisbetrue
+let m = 90 in m + 20;;
+let x =  fun a x -> a + x;;
