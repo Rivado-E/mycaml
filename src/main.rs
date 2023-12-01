@@ -1,5 +1,5 @@
-#[warn(unused_variables)]
-#[warn(dead_code)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
 
 use std::env;
 use std::fs;
@@ -33,7 +33,7 @@ enum TokenTypes {
   TokDef,
   TokFun,
   TokArrow,
-  TokInt(u64),
+  TokInt(i64),
   TokBool(bool),
   TokString(String),
   TokID(String),
@@ -70,51 +70,176 @@ lazy_static! {
     static ref RE_DEF:Regex = Regex::new(r"^def").unwrap();
     static ref RE_FUN:Regex = Regex::new(r"^fun").unwrap();
     static ref RE_ARROW:Regex = Regex::new(r"^->").unwrap();
-    static ref RE_PINT:Regex = Regex::new(r"^[0-9]+").unwrap();
+    static ref RE_PINT:Regex = Regex::new(r"^-?\d+").unwrap();
     static ref RE_NINT:Regex = Regex::new(r"^-[0-9]+").unwrap();
     static ref RE_BOOL:Regex = Regex::new(r"^(false|true)").unwrap();
     static ref RE_ID:Regex = Regex::new(r"^[a-zA-Z][a-zA-Z0-9]*").unwrap();
     static ref RE_DOUBLESEMI:Regex = Regex::new(r";;").unwrap();
 }
 
-fn tokenizer(content:String, position:u32, file_size:u32)-> Vec<TokenTypes>{
-    
-    let tokens :Vec<TokenTypes> = Vec::new();
-    // if position < file_size {
-    //     if let Some(matched) = RE_WHITESPACE.find(&content[position..]){
-    //         print!("");
-    //     }
-    //     //     println!("matched position {}", matched.start());
-    //     // } else if let Some(matched)=RE_{
-    //     //     
-    //     // }   
-    // }
+fn tokenize(content: &String)-> Vec<TokenTypes>{
+    println!("Tokenize is called with {}", content); 
+    let mut tokens :Vec<TokenTypes> = Vec::new();
+    let mut pos: usize = 0;
+    let end:usize = content.len();
+
+    while pos < end {
+        println!("pos at {}", pos);
+        if let Some(matched) = RE_WHITESPACE.find(&content[pos..]){
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_EQUAL.find(&content[pos..]){
+            tokens.push(TokenTypes::TokEqual);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_NOTEQUAL.find(&content[pos..]){
+            tokens.push(TokenTypes::TokNotEqual);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_LESSEQUAL.find(&content[pos..]){
+            tokens.push(TokenTypes::TokLessEqual);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_GREATER.find(&content[pos..]){
+            tokens.push(TokenTypes::TokGreater);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_LESSER.find(&content[pos..]){
+            tokens.push(TokenTypes::TokLess);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_AND.find(&content[pos..]){
+            tokens.push(TokenTypes::TokAnd);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_OR.find(&content[pos..]){
+            tokens.push(TokenTypes::TokOr);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_ADD.find(&content[pos..]){
+            tokens.push(TokenTypes::TokAdd);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_MULT.find(&content[pos..]){
+            tokens.push(TokenTypes::TokMult);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_DIV.find(&content[pos..]){
+            tokens.push(TokenTypes::TokDiv);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_PINT.find(&content[pos..]){
+            let value = match matched.as_str().parse::<i64>() {
+                Ok(parsed_val) => {
+                    parsed_val
+                } 
+                Err(err) => {
+                    eprintln!("Error: {}", err);
+                    0
+                }
+            };
+            tokens.push(TokenTypes::TokInt(value));
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_NOT.find(&content[pos..]){
+            tokens.push(TokenTypes::TokNot);
+            pos += matched.len();
+        }
+
+        else if let Some(matched) = RE_IF.find(&content[pos..]){
+            tokens.push(TokenTypes::TokIf);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_ELSE.find(&content[pos..]){
+            tokens.push(TokenTypes::TokElse);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_LET.find(&content[pos..]){
+            tokens.push(TokenTypes::TokLet);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_REC.find(&content[pos..]){
+            tokens.push(TokenTypes::TokRec);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_DEF.find(&content[pos..]){
+            tokens.push(TokenTypes::TokDef);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_FUN.find(&content[pos..]){
+            tokens.push(TokenTypes::TokFun);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_IN.find(&content[pos..]){
+            tokens.push(TokenTypes::TokIn);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_THEN.find(&content[pos..]){
+            tokens.push(TokenTypes::TokThen);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_BOOL.find(&content[pos..]){
+            tokens.push(TokenTypes::TokNot);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_ARROW.find(&content[pos..]){
+            tokens.push(TokenTypes::TokArrow);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_LPAREN.find(&content[pos..]){
+            tokens.push(TokenTypes::TokLParen);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_RPAREN.find(&content[pos..]){
+            tokens.push(TokenTypes::TokRParen);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_CONCAT.find(&content[pos..]){
+            tokens.push(TokenTypes::TokConcat);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_DOUBLESEMI.find(&content[pos..]){
+            tokens.push(TokenTypes::TokDoubleSemi);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_SUB.find(&content[pos..]){
+            tokens.push(TokenTypes::TokSub);
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_STRING.find(&content[pos..]){
+            tokens.push(TokenTypes::TokString(matched.as_str().to_string()));
+            pos += matched.len();
+        }
+        else if let Some(matched) = RE_ID.find(&content[pos..]){
+            tokens.push(TokenTypes::TokID(matched.as_str().to_string()));
+            pos += matched.len();
+        }
+        else{
+            eprintln!("Unknown token in {}", &content[pos..]);
+            break;
+            
+        }
+        //     println!("matched position {}", matched.start());
+        // } else if let Some(matched)=RE_{
+        //     
+        // }
+    }
 
     tokens
 }
 
 fn main() {
-
-    if let Some(matched) = RE_ID.find(" letall this be what we need"){
-        println!("matched position {}", matched.start());
-        println!("matched position {}", matched.end());
-        println!("matched position {}", matched.as_str());
-    } 
-    return;
-    let args: Vec<String> = env::args().collect();
      // dbg!(args);
-    let filename = env::args().nth(1).expect("no filename given");
+    let file_path = match env::args().nth(1) {
+        Some(path) => path,
+        None => {
+            eprintln!("Usage: mycaml <file_path>");
+            return;
+        }
+    };
 
-    if args.len() > 1{
-
-        let contents = fs::read_to_string(&filename)
-            .expect(&filename);
-
-        // println!("Source code:\n{contents}");
-        //
-        // print!("the length of the content {}", contents.len());
-        tokenizer(contents, 0, 0);
-        // println!("{:?}", tokenizer(contents))
-    }   
+    let content = fs::read_to_string(&file_path).expect(&format!("Error reading the file: {}", &file_path));
+    let tokens = tokenize(&content);
+    println!("Tokens: {:?}", tokens);
 }
 
